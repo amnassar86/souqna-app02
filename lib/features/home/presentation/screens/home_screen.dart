@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 // 1. استيراد صفحة المتجر للانتقال إليها
 import 'package:souqna_app/features/store/presentation/screens/store_details_screen.dart';
-
+import 'package:souqna_app/features/cart/presentation/screens/cart_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -15,7 +15,12 @@ class HomeScreen extends StatelessWidget {
         title: const Text('سوقنا'),
         actions: [
           IconButton(
-            onPressed: () {},
+            // --- هذا هو التعديل الوحيد ---
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const CartScreen()),
+              );
+            },
             icon: const Icon(Icons.shopping_cart_outlined),
           ),
           IconButton(
@@ -161,7 +166,6 @@ class _PopularStoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 2. أضفنا GestureDetector لجعل البطاقة قابلة للضغط
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
@@ -205,7 +209,6 @@ class _StoreListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 3. أضفنا GestureDetector هنا أيضاً
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:souqna_app/features/product/presentation/screens/product_details_screen.dart'; // استيراد صفحة تفاصيل المنتج
 
 class StoreDetailsScreen extends StatelessWidget {
   const StoreDetailsScreen({super.key});
@@ -7,12 +8,11 @@ class StoreDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // --- 1. تم تعديل هيكل الصفحة بالكامل ---
       body: CustomScrollView(
         slivers: [
           // الشريط العلوي مع الصورة الخلفية
           SliverAppBar(
-            expandedHeight: 200.0, // قللنا ارتفاع الصورة قليلاً
+            expandedHeight: 200.0,
             pinned: true,
             stretch: true,
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -32,26 +32,22 @@ class StoreDetailsScreen extends StatelessWidget {
             ],
           ),
 
-          // --- 2. الحل السحري هنا ---
-          // نستخدم SliverToBoxAdapter لوضع ويدجت عادية داخل منطقة التمرير
+          // --- الحل السحري هنا ---
           SliverToBoxAdapter(
             child: Transform.translate(
-              // نقوم برفع البطاقة للأعلى بمقدار 75 بكسل
-              offset: const Offset(0, 0),
+              // --- هذا هو التعديل المطلوب ---
+              offset: const Offset(0, 0), 
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: _StoreInfoCard(), // هذه هي بطاقتنا
+                child: _StoreInfoCard(),
               ),
             ),
           ),
 
-          // --- 3. بقية محتوى الصفحة كسلايفرات منفصلة ---
-          // عنوان قسم "الأكثر طلباً"
+          // --- بقية محتوى الصفحة ---
           const SliverToBoxAdapter(child: _SectionTitle(title: 'الأكثر طلباً')),
-          
-          // شبكة المنتجات
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.fromLTRB(16,0,16,0), // تعديل المسافة
             sliver: SliverGrid.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
@@ -63,18 +59,12 @@ class StoreDetailsScreen extends StatelessWidget {
               itemBuilder: (context, index) => _ProductGridCard(index: index),
             ),
           ),
-
-          // عنوان قسم "قائمة المنتجات"
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
           const SliverToBoxAdapter(child: _SectionTitle(title: 'قائمة المنتجات')),
-
-          // قائمة المنتجات
           SliverList.builder(
             itemCount: 8,
             itemBuilder: (context, index) => _ProductListItem(index: index),
           ),
-          
-          // مسافة في الأسفل
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
         ],
       ),
@@ -83,7 +73,7 @@ class StoreDetailsScreen extends StatelessWidget {
   }
 }
 
-// --- ويدجتس مساعدة (لم يتم تغييرها، يمكنك نسخها كما هي) ---
+// --- ويدجتس مساعدة ---
 
 class _SectionTitle extends StatelessWidget {
   final String title;
@@ -151,48 +141,53 @@ class _ProductGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.network(
-                'https://picsum.photos/300/400?random=${index + 50}',
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('اسم المنتج', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 4),
-                    Text('150.00 ر.س', style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
-                  ],
+    return GestureDetector( // تفعيل الضغط
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductDetailsScreen()));
+      },
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  'https://picsum.photos/300/400?random=${index + 50}',
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
                 ),
-              )
-            ],
-          ),
-          Positioned(
-            bottom: 4,
-            left: 4,
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.teal,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.white, size: 20),
-                onPressed: () {},
-              ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('اسم المنتج', style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 4),
+                      Text('150.00 ر.س', style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                )
+              ],
             ),
-          )
-        ],
+            Positioned(
+              bottom: 4,
+              left: 4,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.teal,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.white, size: 20),
+                  onPressed: () {},
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -204,51 +199,56 @@ class _ProductListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('اسم منتج آخر مميز', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text('وصف قصير للمنتج ومكوناته الرئيسية يوضع هنا لجذب الزبون', style: TextStyle(fontSize: 14, color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('90.00 ر.س', style: TextStyle(fontSize: 16, color: Colors.teal, fontWeight: FontWeight.bold)),
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Colors.teal.withOpacity(0.1),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.teal, size: 20),
-                        onPressed: () {},
+    return GestureDetector( // تفعيل الضغط
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductDetailsScreen()));
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('اسم منتج آخر مميز', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text('وصف قصير للمنتج ومكوناته الرئيسية يوضع هنا لجذب الزبون', style: TextStyle(fontSize: 14, color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('90.00 ر.س', style: TextStyle(fontSize: 16, color: Colors.teal, fontWeight: FontWeight.bold)),
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.teal.withOpacity(0.1),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.teal, size: 20),
+                          onPressed: () {},
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 2,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                'https://picsum.photos/300/300?random=${index + 200}',
-                height: 100,
-                fit: BoxFit.cover,
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  'https://picsum.photos/300/300?random=${index + 200}',
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

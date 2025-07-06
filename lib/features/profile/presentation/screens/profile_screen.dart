@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:souqna_app/features/settings/presentation/screens/settings_screen.dart';
+import 'package:souqna_app/features/profile/presentation/screens/edit_profile_screen.dart';
+import 'package:souqna_app/features/customer_service/presentation/screens/customer_service_screen.dart';
+import 'package:souqna_app/features/invite_friend/presentation/screens/invite_friend_screen.dart';
+
+
+
+
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -21,21 +30,27 @@ class ProfileScreen extends StatelessWidget {
             title: 'ملفي الشخصي',
             icon: Icons.person_outline,
             onTap: () {
-              // سيتم الانتقال لصفحة الملف الشخصي هنا
+                Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                );
             },
           ),
           ProfileMenuItem(
             title: 'دعوة صديق',
             icon: Icons.group_add_outlined,
             onTap: () {
-              // سيتم فتح نافذة المشاركة هنا
+                Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const InviteFriendScreen()),
+              );
             },
           ),
           ProfileMenuItem(
             title: 'خدمة العملاء',
             icon: Icons.support_agent_outlined,
             onTap: () {
-              // سيتم الانتقال لصفحة خدمة العملاء هنا
+                Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const CustomerServiceScreen()),
+              );
             },
           ),
           const Divider(height: 20, thickness: 1), // فاصل بصري
@@ -43,7 +58,10 @@ class ProfileScreen extends StatelessWidget {
             title: 'الإعدادات',
             icon: Icons.settings_outlined,
             onTap: () {
-              // سيتم الانتقال لصفحة الإعدادات هنا
+                  // الانتقال إلى شاشة الإعدادات
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
             },
           ),
           const Divider(height: 20, thickness: 1),

@@ -4,16 +4,22 @@ import 'package:souqna_app/features/orders/presentation/screens/orders_screen.da
 import 'package:souqna_app/features/profile/presentation/screens/profile_screen.dart';
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  final int initialIndex;
+  const AppShell({super.key, this.initialIndex = 0});
 
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
 class _AppShellState extends State<AppShell> {
-  int _selectedIndex = 0; // 0 للرئيسية, 1 للطلبات, 2 للملف الشخصي
+  late int _selectedIndex;
 
-  // قائمة الشاشات التي سنتنقل بينها
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
+
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     OrdersScreen(),
