@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-// 1. استيراد حزمة الترجمة
-import 'package:flutter_localizations/flutter_localizations.dart'; 
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart'; // 1. استيراد المكتبة
+import 'package:souqna_app/features/cart/data/cart_provider.dart'; // 2. استيراد مخزن السلة
 import 'package:souqna_app/features/splash/presentation/screens/splash_screen.dart';
 
 void main() {
-  runApp(const SouqnaApp());
+  runApp(
+    // 3. تغليف التطبيق بالـ Provider
+    ChangeNotifierProvider(
+      create: (context) => CartProvider(),
+      child: const SouqnaApp(),
+    ),
+  );
 }
 
 class SouqnaApp extends StatelessWidget {
@@ -15,19 +22,15 @@ class SouqnaApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Souqna',
-      
-      // --- بداية الإضافات الخاصة باللغة العربية ---
-      locale: const Locale('ar'), // 2. تحديد اللغة العربية
+      locale: const Locale('ar'),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('ar', ''), // دعم اللغة العربية
+        Locale('ar', ''),
       ],
-      // --- نهاية الإضافات ---
-
       theme: ThemeData(
         primarySwatch: Colors.teal,
         fontFamily: 'Cairo',

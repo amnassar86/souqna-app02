@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:souqna_app/features/product/presentation/screens/product_details_screen.dart'; // استيراد صفحة تفاصيل المنتج
+import 'package:souqna_app/features/product/presentation/screens/product_details_screen.dart'; 
+import 'package:provider/provider.dart';
+import 'package:souqna_app/features/cart/data/cart_provider.dart';
 
 class StoreDetailsScreen extends StatelessWidget {
   const StoreDetailsScreen({super.key});
@@ -32,10 +34,9 @@ class StoreDetailsScreen extends StatelessWidget {
             ],
           ),
 
-          // --- الحل السحري هنا ---
+          // --- بطاقة معلومات المتجر ---
           SliverToBoxAdapter(
             child: Transform.translate(
-              // --- هذا هو التعديل المطلوب ---
               offset: const Offset(0, 0), 
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -47,7 +48,7 @@ class StoreDetailsScreen extends StatelessWidget {
           // --- بقية محتوى الصفحة ---
           const SliverToBoxAdapter(child: _SectionTitle(title: 'الأكثر طلباً')),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16,0,16,0), // تعديل المسافة
+            padding: const EdgeInsets.fromLTRB(16,0,16,0),
             sliver: SliverGrid.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
@@ -141,7 +142,7 @@ class _ProductGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector( // تفعيل الضغط
+    return GestureDetector(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductDetailsScreen()));
       },
@@ -182,7 +183,18 @@ class _ProductGridCard extends StatelessWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.white, size: 20),
-                  onPressed: () {},
+                  // --- هنا التعديل الأول ---
+                  onPressed: () {
+                    final cart = Provider.of<CartProvider>(context, listen: false);
+                    cart.addItem('منتج من الشبكة ${index + 1}');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تمت الإضافة إلى السلة!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
                 ),
               ),
             )
@@ -199,7 +211,7 @@ class _ProductListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector( // تفعيل الضغط
+    return GestureDetector(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductDetailsScreen()));
       },
@@ -227,7 +239,18 @@ class _ProductListItem extends StatelessWidget {
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.teal, size: 20),
-                          onPressed: () {},
+                          // --- هنا التعديل الثاني ---
+                          onPressed: () {
+                            final cart = Provider.of<CartProvider>(context, listen: false);
+                            cart.addItem('منتج من القائمة ${index + 1}');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('تمت الإضافة إلى السلة!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],

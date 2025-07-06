@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:provider/provider.dart';
+import 'package:souqna_app/features/cart/data/cart_provider.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
   const ProductDetailsScreen({super.key});
@@ -103,7 +105,22 @@ class ProductDetailsScreen extends StatelessWidget {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () {
+            // 1. نوصل لذاكرة السلة
+            final cart = Provider.of<CartProvider>(context, listen: false);
+            
+            // 2. نضيف المنتج (هنستخدم اسم وهمي دلوقتي)
+            cart.addItem('منتج جديد');
+
+            // 3. نظهر رسالة التأكيد
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تمت إضافة المنتج إلى السلة بنجاح!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
           icon: const Icon(Icons.add_shopping_cart),
           label: const Text('إضافة إلى السلة'),
           style: ElevatedButton.styleFrom(

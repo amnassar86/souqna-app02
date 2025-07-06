@@ -3,6 +3,8 @@ import 'dart:math';
 // 1. استيراد صفحة المتجر للانتقال إليها
 import 'package:souqna_app/features/store/presentation/screens/store_details_screen.dart';
 import 'package:souqna_app/features/cart/presentation/screens/cart_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:souqna_app/features/cart/data/cart_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,14 +16,25 @@ class HomeScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         title: const Text('سوقنا'),
         actions: [
-          IconButton(
-            // --- هذا هو التعديل الوحيد ---
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const CartScreen()),
+          // نستخدم Consumer عشان الويدجت دي بس هي اللي تتحدث لما السلة تتغير
+          Consumer<CartProvider>(
+            builder: (context, cart, child) {
+              return Badge(
+                // نظهر الرقم لو السلة مش فاضية
+                isLabelVisible: cart.itemCount > 0,
+                label: Text(cart.itemCount.toString()),
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const CartScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.shopping_cart_outlined),
+                ),
               );
             },
-            icon: const Icon(Icons.shopping_cart_outlined),
           ),
           IconButton(
             onPressed: () {},
@@ -81,8 +94,14 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: const [
                   _CategoryIcon(title: 'أزياء', icon: Icons.checkroom),
-                  _CategoryIcon(title: 'إلكترونيات', icon: Icons.electrical_services),
-                  _CategoryIcon(title: 'سوبرماركت', icon: Icons.local_grocery_store),
+                  _CategoryIcon(
+                    title: 'إلكترونيات',
+                    icon: Icons.electrical_services,
+                  ),
+                  _CategoryIcon(
+                    title: 'سوبرماركت',
+                    icon: Icons.local_grocery_store,
+                  ),
                   _CategoryIcon(title: 'مطاعم', icon: Icons.restaurant),
                   _CategoryIcon(title: 'أخرى', icon: Icons.category),
                 ],
@@ -98,7 +117,8 @@ class HomeScreen extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 itemCount: 5,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemBuilder: (context, index) => _PopularStoreCard(index: index),
+                itemBuilder: (context, index) =>
+                    _PopularStoreCard(index: index),
               ),
             ),
             const SizedBox(height: 24),
@@ -188,13 +208,18 @@ class _PopularStoreCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text('اسم المتجر', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'اسم المتجر',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             Row(
               children: [
                 const Icon(Icons.star, color: Colors.amber, size: 16),
-                Text((Random().nextDouble() * (5 - 3.5) + 3.5).toStringAsFixed(1)),
+                Text(
+                  (Random().nextDouble() * (5 - 3.5) + 3.5).toStringAsFixed(1),
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -218,9 +243,7 @@ class _StoreListItem extends StatelessWidget {
       child: Card(
         elevation: 2,
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
@@ -239,20 +262,35 @@ class _StoreListItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('اسم المتجر', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'اسم المتجر',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const Text('الفئة', style: TextStyle(color: Colors.grey)),
                     Row(
                       children: [
                         const Icon(Icons.star, color: Colors.amber, size: 16),
-                        Text((Random().nextDouble() * (5 - 3.5) + 3.5).toStringAsFixed(1)),
+                        Text(
+                          (Random().nextDouble() * (5 - 3.5) + 3.5)
+                              .toStringAsFixed(1),
+                        ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.location_on, color: Colors.grey, size: 16),
-                        Text('${(Random().nextDouble() * 10).toStringAsFixed(1)} كم'),
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.grey,
+                          size: 16,
+                        ),
+                        Text(
+                          '${(Random().nextDouble() * 10).toStringAsFixed(1)} كم',
+                        ),
                       ],
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
