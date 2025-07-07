@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:souqna_app/features/product/presentation/screens/product_details_screen.dart'; 
+import 'package:souqna_app/features/product/presentation/screens/product_details_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:souqna_app/features/cart/data/cart_provider.dart';
+import 'package:souqna_app/features/cart/presentation/screens/cart_screen.dart';
 
 class StoreDetailsScreen extends StatelessWidget {
   const StoreDetailsScreen({super.key});
@@ -12,7 +13,6 @@ class StoreDetailsScreen extends StatelessWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // الشريط العلوي مع الصورة الخلفية
           SliverAppBar(
             expandedHeight: 200.0,
             pinned: true,
@@ -33,22 +33,18 @@ class StoreDetailsScreen extends StatelessWidget {
               IconButton(onPressed: () {}, icon: const Icon(Icons.favorite_border)),
             ],
           ),
-
-          // --- بطاقة معلومات المتجر ---
           SliverToBoxAdapter(
             child: Transform.translate(
-              offset: const Offset(0, 0), 
+              offset: const Offset(0, 0),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: _StoreInfoCard(),
               ),
             ),
           ),
-
-          // --- بقية محتوى الصفحة ---
           const SliverToBoxAdapter(child: _SectionTitle(title: 'الأكثر طلباً')),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16,0,16,0),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
             sliver: SliverGrid.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
@@ -67,14 +63,247 @@ class StoreDetailsScreen extends StatelessWidget {
             itemBuilder: (context, index) => _ProductListItem(index: index),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+          // --- هذا هو السطر الجديد الذي يحل المشكلة ---
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
-      bottomNavigationBar: const _MinOrderBottomBar(),
+      bottomNavigationBar: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          if (cart.itemCount == 0) {
+            return const _MinOrderBottomBar();
+          } else {
+            return _ViewCartBottomBar(
+              itemCount: cart.itemCount,
+              totalAmount: cart.subtotal,
+            );
+          }
+        },
+      ),
     );
   }
 }
 
-// --- ويدجتس مساعدة ---
+// الكود النهائي والصحيح للشريط السفلي
+class _ViewCartBottomBar extends StatelessWidget {
+  final int itemCount;
+  final double totalAmount;
+
+  const _ViewCartBottomBar({required this.itemCount, required this.totalAmount});
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomAppBar(
+      elevation: 8,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          // 1. الجزء الخاص بالنصوص
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min, // مهم: يجعل العمود يأخذ أقل ارتفاع ممكن
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'تم إضافة ($itemCount) منتج',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'الإجمالي: ${totalAmount.toStringAsFixed(2)} ر.س',
+                  style: const TextStyle(
+                    color: Colors.teal,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+
+            // 2. الـ Spacer يأخذ كل المساحة الفارغة في المنتصف
+            const Spacer(),
+
+            // 3. الزر
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const CartScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('عرض السلة'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductGridCard extends StatelessWidget {
+  final int index;
+  const _ProductGridCard({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => const ProductDetailsScreen()));
+      },
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  'https://picsum.photos/300/400?random=${index + 50}',
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('اسم المنتج',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 4),
+                      Text('150.00 ر.س',
+                          style: TextStyle(
+                              color: Colors.teal, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            Positioned(
+              bottom: 4,
+              left: 4,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.teal,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.add_shopping_cart_outlined,
+                      color: Colors.white, size: 20),
+                  onPressed: () {
+                    final cart =
+                        Provider.of<CartProvider>(context, listen: false);
+                    cart.addItem(Product(
+                        name: 'منتج من الشبكة ${index + 1}', price: 150.0));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تمت الإضافة إلى السلة!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductListItem extends StatelessWidget {
+  final int index;
+  const _ProductListItem({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => const ProductDetailsScreen()));
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('اسم منتج آخر مميز',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text('وصف قصير للمنتج...',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('90.00 ر.س',
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.teal,
+                              fontWeight: FontWeight.bold)),
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.teal.withOpacity(0.1),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.add_shopping_cart_outlined,
+                              color: Colors.teal, size: 20),
+                          onPressed: () {
+                            final cart =
+                                Provider.of<CartProvider>(context, listen: false);
+                            cart.addItem(Product(
+                                name: 'منتج من القائمة ${index + 1}', price: 90.0));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('تمت الإضافة إلى السلة!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  'https://picsum.photos/300/300?random=${index + 200}',
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _SectionTitle extends StatelessWidget {
   final String title;
@@ -105,16 +334,23 @@ class _StoreInfoCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network('https://picsum.photos/100/100?random=1', width: 60, height: 60, fit: BoxFit.cover),
+                  child: Image.network(
+                      'https://picsum.photos/100/100?random=1',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
-                      Text('ماركوس للحلويات', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text('ماركوس للحلويات',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
                       SizedBox(height: 4),
-                      Text('حلويات، مشروبات، قهوة', style: TextStyle(color: Colors.grey)),
+                      Text('حلويات، مشروبات، قهوة',
+                          style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ),
@@ -128,147 +364,6 @@ class _StoreInfoCard extends StatelessWidget {
                 _InfoChip(icon: Icons.timer_outlined, text: '25-40 د'),
                 _InfoChip(icon: Icons.delivery_dining, text: '24.99 ج.م'),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductGridCard extends StatelessWidget {
-  final int index;
-  const _ProductGridCard({required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductDetailsScreen()));
-      },
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.network(
-                  'https://picsum.photos/300/400?random=${index + 50}',
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('اسم المنتج', style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(height: 4),
-                      Text('150.00 ر.س', style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                )
-              ],
-            ),
-            Positioned(
-              bottom: 4,
-              left: 4,
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.teal,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.white, size: 20),
-                  // --- هنا التعديل الأول ---
-                  onPressed: () {
-                    final cart = Provider.of<CartProvider>(context, listen: false);
-                    cart.addItem('منتج من الشبكة ${index + 1}');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('تمت الإضافة إلى السلة!'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductListItem extends StatelessWidget {
-  final int index;
-  const _ProductListItem({required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductDetailsScreen()));
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('اسم منتج آخر مميز', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text('وصف قصير للمنتج ومكوناته الرئيسية يوضع هنا لجذب الزبون', style: TextStyle(fontSize: 14, color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('90.00 ر.س', style: TextStyle(fontSize: 16, color: Colors.teal, fontWeight: FontWeight.bold)),
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.teal.withOpacity(0.1),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.teal, size: 20),
-                          // --- هنا التعديل الثاني ---
-                          onPressed: () {
-                            final cart = Provider.of<CartProvider>(context, listen: false);
-                            cart.addItem('منتج من القائمة ${index + 1}');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('تمت الإضافة إلى السلة!'),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 2,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  'https://picsum.photos/300/300?random=${index + 200}',
-                  height: 100,
-                  fit: BoxFit.cover,
-                ),
-              ),
             ),
           ],
         ),
@@ -305,7 +400,8 @@ class _MinOrderBottomBar extends StatelessWidget {
         child: Text(
           'أضف منتجات بقيمة 50.00 ر.س للوصول للحد الأدنى',
           textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700]),
+          style:
+              TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700]),
         ),
       ),
     );

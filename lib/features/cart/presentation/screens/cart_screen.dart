@@ -8,7 +8,6 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. نستخدم Consumer عشان الشاشة تتحدث تلقائياً مع أي تغيير في السلة
     return Consumer<CartProvider>(
       builder: (context, cart, child) {
         return Scaffold(
@@ -16,33 +15,31 @@ class CartScreen extends StatelessWidget {
             title: const Text('سلة التسوق'),
             centerTitle: true,
           ),
-          // 2. نعرض رسالة لو السلة فاضية، أو نعرض المنتجات لو مش فاضية
           body: cart.items.isEmpty
-              ? const _EmptyCart() // ويدجت للسلة الفارغة
+              ? const _EmptyCart()
               : Column(
                   children: [
                     Expanded(
                       child: ListView.builder(
-                        itemCount: cart.itemCount, // بنستخدم العدد الحقيقي من الذاكرة
+                        itemCount: cart.itemCount,
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         itemBuilder: (context, index) {
-                          final item = cart.items[index]; // بنجيب المنتج الحقيقي
+                          final product = cart.items[index];
                           return _CartItemCard(
-                            productName: item,
+                            product: product,
                             index: index,
                           );
                         },
                       ),
                     ),
-                    _OrderSummary(itemCount: cart.itemCount), // بنمرر عدد المنتجات للملخص
+                    _OrderSummary(subtotal: cart.subtotal),
                   ],
                 ),
-          // 3. بنعطل زر إتمام الطلب لو السلة فاضية
           bottomNavigationBar: Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: cart.items.isEmpty
-                  ? null // تعطيل الزر
+                  ? null
                   : () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (context) => const CheckoutScreen()),
@@ -51,7 +48,7 @@ class CartScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey, // لون الزر وهو معطل
+                disabledBackgroundColor: Colors.grey,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 shape: RoundedRectangleBorder(
@@ -69,11 +66,10 @@ class CartScreen extends StatelessWidget {
 
 // --- ويدجتس مساعدة ---
 
-// ويدجت لبطاقة المنتج في السلة (تم تعديلها)
 class _CartItemCard extends StatelessWidget {
-  final String productName;
+  final Product product;
   final int index;
-  const _CartItemCard({required this.productName, required this.index});
+  const _CartItemCard({required this.product, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +92,7 @@ class _CartItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  productName, // بنعرض اسم المنتج الحقيقي
+                  product.name,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -110,19 +106,9 @@ class _CartItemCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        onPressed: () {},
-                        icon: const Icon(Icons.remove, size: 18),
-                      ),
+                      IconButton(constraints: const BoxConstraints(), padding: const EdgeInsets.symmetric(horizontal: 8), onPressed: () {}, icon: const Icon(Icons.remove, size: 18)),
                       const Text('1', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      IconButton(
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        onPressed: () {},
-                        icon: const Icon(Icons.add, size: 18),
-                      ),
+                      IconButton(constraints: const BoxConstraints(), padding: const EdgeInsets.symmetric(horizontal: 8), onPressed: () {}, icon: const Icon(Icons.add, size: 18)),
                     ],
                   ),
                 ),
@@ -133,16 +119,14 @@ class _CartItemCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text(
-                '150.00 ر.س',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Text(
+                '${product.price.toStringAsFixed(2)} ر.س',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              // تفعيل زر الحذف
               IconButton(
                 onPressed: () {
-                  // بنكلم الذاكرة ونقولها تمسح المنتج ده
-                  Provider.of<CartProvider>(context, listen: false).removeItem(productName);
+                  Provider.of<CartProvider>(context, listen: false).removeItem(product);
                 },
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
               ),
@@ -154,30 +138,27 @@ class _CartItemCard extends StatelessWidget {
   }
 }
 
-// ويدجت لملخص الطلب (تم تعديلها)
 class _OrderSummary extends StatelessWidget {
-  final int itemCount;
-  const _OrderSummary({required this.itemCount});
+  final double subtotal;
+  const _OrderSummary({required this.subtotal});
 
   @override
   Widget build(BuildContext context) {
-    // حسابات وهمية بسيطة
-    final subtotal = itemCount * 150.0;
-    const deliveryFee = 25.0; // رسوم التوصيل ثابتة، فممكن تفضل const
+    const deliveryFee = 25.0;
     final total = subtotal + deliveryFee;
 
     return Container(
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 8),
       padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          // --- هنا التعديل: شيلنا const من السطرين دول ---
           _SummaryRow(title: 'المجموع الفرعي', value: '${subtotal.toStringAsFixed(2)} ر.س'),
           const SizedBox(height: 8),
+          // --- هنا التعديل: شيلنا const من السطر ده ---
           _SummaryRow(title: 'رسوم التوصيل', value: '${deliveryFee.toStringAsFixed(2)} ر.س'),
           const Divider(height: 24),
           _SummaryRow(
@@ -191,31 +172,22 @@ class _OrderSummary extends StatelessWidget {
   }
 }
 
-// ويدجت لسطر في ملخص الطلب
 class _SummaryRow extends StatelessWidget {
   final String title;
   final String value;
   final bool isTotal;
-
   const _SummaryRow({required this.title, required this.value, this.isTotal = false});
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(
-      fontSize: isTotal ? 18 : 16,
-      fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-    );
+    final style = TextStyle(fontSize: isTotal ? 18 : 16, fontWeight: isTotal ? FontWeight.bold : FontWeight.normal);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: style),
-        Text(value, style: style),
-      ],
+      children: [Text(title, style: style), Text(value, style: style)],
     );
   }
 }
 
-// ويدجت جديدة للسلة الفارغة
 class _EmptyCart extends StatelessWidget {
   const _EmptyCart();
 
@@ -227,15 +199,9 @@ class _EmptyCart extends StatelessWidget {
         children: [
           const Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
           const SizedBox(height: 20),
-          const Text(
-            'سلة التسوق فارغة!',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
+          const Text('سلة التسوق فارغة!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text(
-            'أضف بعض المنتجات لتبدأ رحلة التسوق.',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
+          Text('أضف بعض المنتجات لتبدأ رحلة التسوق.', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
         ],
       ),
     );

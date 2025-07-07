@@ -1,25 +1,39 @@
 import 'package:flutter/material.dart';
 
-// هذا الكلاس هو "ذاكرة" سلة التسوق
+// 1. أنشأنا كلاس بسيط للمنتج عشان نخزن الاسم والسعر
+class Product {
+  final String name;
+  final double price;
+  // ممكن نضيف صورة ومنتج ID في المستقبل
+  Product({required this.name, required this.price});
+}
+
 class CartProvider with ChangeNotifier {
-  final List<String> _items = []; // قائمة وهمية بأسماء المنتجات
+  // 2. غيرنا القائمة عشان تخزن منتجات كاملة
+  final List<Product> _items = [];
 
-  // دالة لجلب قائمة المنتجات
-  List<String> get items => _items;
+  List<Product> get items => _items;
 
-  // دالة لجلب عدد المنتجات في السلة
   int get itemCount => _items.length;
 
-  // دالة لإضافة منتج للسلة
-  void addItem(String productName) {
-    _items.add(productName);
-    // السطر ده مهم جداً، هو اللي بيبلغ كل الشاشات إن فيه تغيير حصل
+  // 3. دالة جديدة لحساب السعر الإجمالي للمنتجات
+  double get subtotal {
+    var total = 0.0;
+    for (var cartItem in _items) {
+      total += cartItem.price;
+    }
+    return total;
+  }
+
+  // 4. عدلنا دالة الإضافة عشان تستقبل منتج كامل
+  void addItem(Product product) {
+    _items.add(product);
     notifyListeners();
   }
 
-  // دالة لحذف منتج من السلة
-  void removeItem(String productName) {
-    _items.remove(productName);
+  // 5. عدلنا دالة الحذف عشان تستقبل منتج كامل
+  void removeItem(Product product) {
+    _items.remove(product);
     notifyListeners();
   }
 }

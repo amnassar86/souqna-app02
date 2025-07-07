@@ -3,11 +3,7 @@ import 'package:souqna_app/features/settings/presentation/screens/settings_scree
 import 'package:souqna_app/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:souqna_app/features/customer_service/presentation/screens/customer_service_screen.dart';
 import 'package:souqna_app/features/invite_friend/presentation/screens/invite_friend_screen.dart';
-
-
-
-
-
+import 'package:souqna_app/features/profile/presentation/screens/my_addresses_screen.dart'; // 1. استيراد الشاشة الجديدة
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -15,7 +11,6 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. أضفنا شريطاً علوياً لعنوان الصفحة
       appBar: AppBar(
         title: const Text('حسابي'),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -25,21 +20,31 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
-          // 2. أنشأنا ويدجت قابلة لإعادة الاستخدام لكل عنصر في القائمة
           ProfileMenuItem(
             title: 'ملفي الشخصي',
             icon: Icons.person_outline,
             onTap: () {
-                Navigator.of(context).push(
+              Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                );
+              );
             },
           ),
+          // --- 2. هذا هو الخيار الجديد الذي تمت إضافته ---
+          ProfileMenuItem(
+            title: 'عناويني',
+            icon: Icons.location_on_outlined,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const MyAddressesScreen()),
+              );
+            },
+          ),
+          const Divider(height: 20, thickness: 1, indent: 16, endIndent: 16), // فاصل إضافي
           ProfileMenuItem(
             title: 'دعوة صديق',
             icon: Icons.group_add_outlined,
             onTap: () {
-                Navigator.of(context).push(
+              Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const InviteFriendScreen()),
               );
             },
@@ -48,28 +53,26 @@ class ProfileScreen extends StatelessWidget {
             title: 'خدمة العملاء',
             icon: Icons.support_agent_outlined,
             onTap: () {
-                Navigator.of(context).push(
+              Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const CustomerServiceScreen()),
               );
             },
           ),
-          const Divider(height: 20, thickness: 1), // فاصل بصري
+          const Divider(height: 20, thickness: 1),
           ProfileMenuItem(
             title: 'الإعدادات',
             icon: Icons.settings_outlined,
             onTap: () {
-                  // الانتقال إلى شاشة الإعدادات
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
           const Divider(height: 20, thickness: 1),
-          // 3. أضفنا زر تسجيل الخروج كخيار مهم في هذه الصفحة
           ProfileMenuItem(
             title: 'تسجيل الخروج',
             icon: Icons.logout,
-            textColor: Colors.red, // لتمييزه عن بقية الخيارات
+            textColor: Colors.red,
             onTap: () {
               // سيتم تنفيذ عملية تسجيل الخروج هنا
             },
@@ -80,8 +83,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-/// ويدجت مخصصة وقابلة لإعادة الاستخدام لعرض عناصر القائمة
-/// هذا يجعل الكود الرئيسي أنظف وأسهل في القراءة
+// ويدجت مخصصة وقابلة لإعادة الاستخدام لعرض عناصر القائمة
 class ProfileMenuItem extends StatelessWidget {
   final String title;
   final IconData icon;
