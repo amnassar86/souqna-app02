@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:souqna_app/features/cart/data/cart_provider.dart';
 import 'package:souqna_app/features/auth/presentation/screens/login_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // استيراد Supabase
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -13,15 +11,12 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  // 1. إضافة Controllers للتحكم في حقول الإدخال
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _fullNameController = TextEditingController();
-  bool _isLoading = false; // لإظهار مؤشر التحميل
+  bool _isLoading = false;
 
-  // دالة لتسجيل المستخدم
   Future<void> _signUp() async {
-    // التحقق من صحة البيانات المدخلة
     final isValid = _formKey.currentState?.validate();
     if (isValid != true) {
       return;
@@ -32,17 +27,15 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      // 2. التواصل مع Supabase لإنشاء حساب جديد
       final supabase = Supabase.instance.client;
+      // الكود المبسط الذي يعتمد على الـ Trigger في قاعدة البيانات
       await supabase.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
-        data: {
-          'full_name': _fullNameController.text.trim()
-        }, // هنا بنبعت البيانات الإضافية اللي هتتخزن في profiles
+        // بنبعت الاسم هنا عشان الـ Trigger يستخدمه في جدول profiles
+        data: {'full_name': _fullNameController.text.trim()},
       );
 
-      // 3. إظهار رسالة نجاح وتوجيه المستخدم
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تم إنشاء الحساب بنجاح! يرجى تأكيد بريدك الإلكتروني.')),
@@ -51,23 +44,24 @@ class _SignupScreenState extends State<SignupScreen> {
             MaterialPageRoute(builder: (context) => const LoginScreen()));
       }
     } on AuthException catch (error) {
-      // 4. التعامل مع الأخطاء
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+          SnackBar(content: Text(error.message), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('حدث خطأ غير متوقع'), backgroundColor: Colors.red),
+          SnackBar(content: const Text('حدث خطأ غير متوقع'), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
     }
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -82,7 +76,9 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // ... (بقية الـ AppBar كما هو)
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -92,46 +88,69 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ... (العناوين ومساحات فارغة كما هي)
+                const SizedBox(height: 20),
+                const Text('إنشاء حساب جديد', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                const Text('أهلاً بك! يرجى ملء الحقول التالية', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey)),
                 const SizedBox(height: 40),
-
-                // حقول الإدخال مع ربطها بالـ Controllers
                 TextFormField(
                   controller: _fullNameController,
-                  decoration: const InputDecoration(labelText: 'الاسم الكامل', /* ... */),
+                  decoration: const InputDecoration(labelText: 'الاسم الكامل', prefixIcon: Icon(Icons.person_outline), border: OutlineInputBorder()),
                   validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'الرجاء إدخال الاسم الكامل';
+                    }
                     return null;
-                   /* ... */ },
+                  },
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'البريد الإلكتروني', /* ... */),
+                  decoration: const InputDecoration(labelText: 'البريد الإلكتروني', prefixIcon: Icon(Icons.email_outlined), border: OutlineInputBorder()),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
+                    if (value == null || value.trim().isEmpty || !value.contains('@')) {
+                      return 'الرجاء إدخال بريد إلكتروني صحيح';
+                    }
                     return null;
-                   /* ... */ },
+                  },
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'كلمة المرور', /* ... */),
+                  decoration: const InputDecoration(labelText: 'كلمة المرور', prefixIcon: Icon(Icons.lock_outline), border: OutlineInputBorder()),
                   obscureText: true,
                   validator: (value) {
+                    if (value == null || value.length < 6) {
+                      return 'كلمة المرور يجب أن لا تقل عن 6 أحرف';
+                    }
                     return null;
-                   /* ... */ },
+                  },
                 ),
                 const SizedBox(height: 40),
-
-                // زر إنشاء الحساب
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _signUp, // تفعيل الزر أو تعطيله
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('إنشاء الحساب'),
-                  // ... (بقية الستايل كما هو)
+                  onPressed: _isLoading ? null : _signUp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('إنشاء الحساب', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
-                // ... (بقية الكود كما هو)
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('لديك حساب بالفعل؟'),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const LoginScreen()));
+                      },
+                      child: const Text('تسجيل الدخول', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
+                    )
+                  ],
+                )
               ],
             ),
           ),

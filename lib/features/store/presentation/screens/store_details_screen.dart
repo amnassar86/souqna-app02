@@ -84,7 +84,6 @@ class StoreDetailsScreen extends StatelessWidget {
   }
 }
 
-// الكود النهائي والصحيح للشريط السفلي
 class _ViewCartBottomBar extends StatelessWidget {
   final int itemCount;
   final double totalAmount;
@@ -98,32 +97,23 @@ class _ViewCartBottomBar extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
-          // 1. الجزء الخاص بالنصوص
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              mainAxisSize: MainAxisSize.min, // مهم: يجعل العمود يأخذ أقل ارتفاع ممكن
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'تم إضافة ($itemCount) منتج',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            // 1. دمجنا النصوص في ويدجت واحدة وقللنا حجم الخط
+            Expanded(
+              child: Text(
+                '($itemCount) منتجات | الإجمالي: ${totalAmount.toStringAsFixed(2)} ر.س',
+                style: const TextStyle(
+                  fontSize: 15, // قللنا حجم الخط
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'الإجمالي: ${totalAmount.toStringAsFixed(2)} ر.س',
-                  style: const TextStyle(
-                    color: Colors.teal,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis, // عشان لو النص طويل يظهر نقط
+              ),
             ),
-
-            // 2. الـ Spacer يأخذ كل المساحة الفارغة في المنتصف
-            const Spacer(),
-
-            // 3. الزر
+            const SizedBox(width: 16),
+            
+            // 2. الزر كما هو
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).push(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:souqna_app/features/auth/presentation/screens/welcome_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:souqna_app/app/shell/app_shell.dart';
 
-// نموذج بسيط لتخزين بيانات كل شاشة ترحيب
 class OnboardingItem {
   final String title;
   final String description;
@@ -22,7 +22,6 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  // قائمة بيانات الشاشات
   final List<OnboardingItem> _pages = [
     OnboardingItem(
       title: 'مرحباً في سوقنا',
@@ -31,14 +30,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     OnboardingItem(
       title: 'ادعم مجتمعك',
-      description:
-          'بكل عملية شراء، أنت تدعم أصحاب المتاجر المحليين وتساهم في نمو اقتصاد مدينتك.',
+      description: 'بكل عملية شراء، أنت تدعم أصحاب المتاجر المحليين.',
       icon: Icons.people_outline,
     ),
     OnboardingItem(
       title: 'استلم طلباتك بسرعة',
-      description:
-          'اطلب عبر التطبيق واستلم طلباتك مباشرة من المتجر بدون انتظار.',
+      description: 'اطلب عبر التطبيق واستلم طلباتك مباشرة من المتجر بدون انتظار.',
       icon: Icons.shopping_bag_outlined,
     ),
   ];
@@ -52,13 +49,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  // --- هنا التعديل الرئيسي ---
+  Future<void> _finishOnboarding() async {
+    // 1. بنفتح الذاكرة المحلية
+    final prefs = await SharedPreferences.getInstance();
+    // 2. بنسجل إنه شاف الشاشات دي
+    await prefs.setBool('hasSeenOnboarding', true);
+
+    if (!mounted) return;
+
+    // 3. بنوديه على الشاشة الرئيسية
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const AppShell()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // الجزء العلوي: الشاشات القابلة للسحب
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -75,38 +86,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                       Icon(item.icon, size: 100, color: Colors.teal),
                       const SizedBox(height: 40),
-                      Text(
-                        item.title,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      Text(item.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                       const SizedBox(height: 16),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: Text(
-                          item.description,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        child: Text(item.description, style: const TextStyle(fontSize: 16, color: Colors.grey), textAlign: TextAlign.center),
                       ),
                     ],
                   );
                 },
               ),
             ),
-            // الجزء السفلي: نقاط وزر
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // النقاط
                   Row(
                     children: List.generate(
                       _pages.length,
@@ -116,15 +111,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         width: _currentPage == index ? 24 : 8,
                         decoration: BoxDecoration(
-                          color: _currentPage == index
-                              ? Colors.teal
-                              : Colors.grey.shade300,
+                          color: _currentPage == index ? Colors.teal : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
                   ),
-                  // الزر
                   FloatingActionButton(
                     onPressed: () {
                       if (_currentPage < _pages.length - 1) {
@@ -133,20 +125,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       } else {
-                        // الانتقال إلى شاشة الاختيار بين تسجيل الدخول وإنشاء حساب
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const WelcomeScreen(),
-                          ),
-                        );
+                        // استدعاء دالة الإنهاء
+                        _finishOnboarding();
                       }
                     },
                     backgroundColor: Colors.teal,
-                    child: const Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white,
-                    ),
-                  ),
+                    child: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                  )
                 ],
               ),
             ),
