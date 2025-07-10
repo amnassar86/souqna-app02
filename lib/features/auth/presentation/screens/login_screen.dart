@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:souqna_app/app/shell/app_shell.dart';
 import 'package:souqna_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,51 +16,75 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   Future<void> _signIn() async {
     final isValid = _formKey.currentState?.validate();
-    if (isValid != true) {
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
+    if (isValid != true) { return; }
+    setState(() { _isLoading = true; });
 
     try {
       final supabase = Supabase.instance.client;
-      // 1. التواصل مع Supabase لتسجيل الدخول
       await supabase.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
       if (mounted) {
-        // 2. لو البيانات صحيحة، انتقل للشاشة الرئيسية
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const AppShell()),
           (route) => false,
         );
       }
     } on AuthException catch (error) {
-      // 3. التعامل مع الأخطاء (زي كلمة مرور غلط)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error.message), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
+    } finally {
+      if (mounted) { setState(() { _isLoading = false; }); }
+    }
+  }
+
+  Future<void> _googleSignIn() async {
+    setState(() { _isGoogleLoading = true; });
+    try {
+      const webClientId = 'YOUR_WEB_CLIENT_ID'; // *** مهم: استبدل الكلام ده بالـ Web Client ID بتاعك ***
+      final googleSignIn = GoogleSignIn(serverClientId: webClientId);
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        if (mounted) { setState(() { _isGoogleLoading = false; }); }
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      if (accessToken == null || idToken == null) {
+        throw 'لم يتم العثور على التوكن من جوجل.';
+      }
+
+      final supabase = Supabase.instance.client;
+      await supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+      
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AppShell()),
+          (route) => false,
+        );
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('حدث خطأ غير متوقع'), backgroundColor: Theme.of(context).colorScheme.error),
+          SnackBar(content: Text('حدث خطأ أثناء تسجيل الدخول بجوجل'), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    } finally {
+      if (mounted) { setState(() { _isGoogleLoading = false; }); }
     }
   }
 
@@ -108,13 +133,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const InputDecoration(labelText: 'كلمة المرور', prefixIcon: Icon(Icons.lock_outline), border: OutlineInputBorder()),
                   obscureText: true,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال كلمة المرور';
-                    }
+                    if (value == null || value.isEmpty) { return 'الرجاء إدخال كلمة المرور'; }
                     return null;
                   },
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
@@ -124,7 +147,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('تسجيل الدخول', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
-                const SizedBox(height: 20),
+                const _OrDivider(), // فاصل
+                ElevatedButton.icon(
+                  onPressed: _isGoogleLoading ? null : _googleSignIn,
+                  icon: _isGoogleLoading ? const SizedBox.shrink() : Image.asset('assets/google_logo.png', height: 24.0),
+                  label: _isGoogleLoading ? const CircularProgressIndicator(color: Colors.teal) : const Text('المتابعة باستخدام جوجل'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white, foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -141,6 +178,28 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ويدجت مساعدة للفاصل
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Row(
+        children: [
+          const Expanded(child: Divider()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text('أو', style: TextStyle(color: Colors.grey.shade600)),
+          ),
+          const Expanded(child: Divider()),
+        ],
       ),
     );
   }
